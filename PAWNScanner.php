@@ -31,7 +31,7 @@ class Scanner
 	/** @var \PAWNScanner\Enumeration[] Found enumerations. */
 	public $enums = array();
 	
-	/** @var string[] Found symbol constants. Keys are variable names. */
+	/** @var \PAWNScanner\Variable[] Found symbol constants. Keys are variable names. */
 	public $constants = array();
 	
 	/** @var bool Whether comments should be scanned. */
@@ -103,9 +103,11 @@ class Scanner
 		}
 		
 		//Search symbol constants. Only non-indented, as they're assumably in the global scope.
-		if (preg_match_all('/^const\s+(\S.*?)\s*=\s*(.+?)\s*;\s*$/m', $contents, $matches, PREG_SET_ORDER)) {
+		if (preg_match_all('/^const\s+(\S.*?\s*=\s*.+?)\s*;\s*$/m', $contents, $matches, PREG_SET_ORDER)) {
 			foreach ($matches as $match) {
-				$this->constants[$match[1]] = $match[2];
+				$constant = new Variable($match[1]);
+				
+				$this->constants[$constant->varname] = $constant;
 			}
 		}
 		
