@@ -64,9 +64,9 @@ class Scanner
 		$contents = preg_replace('/\\\\\s*?\n\s*/', ' ', $contents);
 		
 		// Search for forward/native declarations
-		if (preg_match_all('/\b(forward|native)\s+([a-z@_][a-z0-9@_\.\:]*)\s*\((.*?)\)\s*;/i', $contents, $matches, PREG_SET_ORDER)) {
+		if (preg_match_all('/\b(forward|native)\s+([a-z@_][a-z0-9@_\.\:]*(?<!:):)?\s*([a-z@_][a-z0-9@_\.\:]*)\s*\((.*?)\)\s*;/i', $contents, $matches, PREG_SET_ORDER)) {
 			foreach ($matches as $match) {
-				list(, $type, $name, $arguments) = $match;
+				list(, $type, $tag, $name, $arguments) = $match;
 				
 				if ($type == 'forward')
 					$type = FunctionDeclaration::TYPE_FORWARD;
@@ -74,7 +74,7 @@ class Scanner
 					$type = FunctionDeclaration::TYPE_NATIVE;
 				
 				if (!isset($this->functions[$name])) {
-					$this->functions[$name] = $function = new FunctionDeclaration($name, $arguments, $type, array(
+					$this->functions[$name] = $function = new FunctionDeclaration($name, $tag, $arguments, $type, array(
 						'file' => (string) $file
 					));
 				}
@@ -162,6 +162,9 @@ class FunctionDeclaration
 	/** @var \PAWNScanner\ArgumentList The function's arguments. */
 	public $arguments;
 	
+	/** @var string|null The function's tag, or null if none. */
+	public $tag;
+	
 	/**
 	 * Extra information about the function, optionally given when instantiating.
 	 *
@@ -179,9 +182,10 @@ class FunctionDeclaration
 	 * @param string $type What kind of declaration it is.
 	 * @param string $info Extra information about the function.
 	 */
-	public function __construct($name, $arguments = '', $type = self::TYPE_UNKNOWN, $info = null)
+	public function __construct($name, $tag, $arguments = '', $type = self::TYPE_UNKNOWN, $info = null)
 	{
 		$this->name = $name;
+		$this->tag = empty($tag) ? null : trim($tag, ": \t\n\r\0\x0B");
 		$this->type = $type;
 		$this->arguments = new ArgumentList($arguments);
 		$this->info = new \stdClass();
