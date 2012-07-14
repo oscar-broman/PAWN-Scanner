@@ -3,7 +3,7 @@ PAWN-Scanner
 
 A code scanner for PAWN. Finds function declarations, enumerations, constants, and more.
 
-# Demo usage
+# Example usage
 
 ```PHP
 <?php
@@ -23,10 +23,11 @@ A code scanner for PAWN. Finds function declarations, enumerations, constants, a
 	// Argument lists are subclasses of VariableList.
 	echo $scanner->functions['SetPlayerPos']->arguments->variables[1] . "\n";
 	echo $scanner->functions['SetPlayerPos']->arguments->variables[1]->tags . "\n";
-	```
-
-	**Output**:
 ?>
+```
+
+**Output**:
+
 ```
 native SetPlayerPos(playerid, Float:x, Float:y, Float:z)
 SetPlayerPos
