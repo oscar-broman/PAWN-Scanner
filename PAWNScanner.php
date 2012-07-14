@@ -221,14 +221,13 @@ class FunctionDeclaration
  *
  * @see \PAWNScanner\Variable
  */
-class VariableList
+class VariableList implements \Iterator
 {
-	/**
-	 * The variable list.
-	 *
-	 * @var \PAWNScanner\Variable[]
-	 */
+	/** @var \PAWNScanner\Variable[] The variable list. */
 	public $variables = array();
+	
+	/** @var int The iterator's current position. */
+	private $position = 0;
 	
 	/**
 	 * Construct the list from a string.
@@ -241,6 +240,31 @@ class VariableList
 		
 		foreach ($args as $arg)
 			$this->variables[] = new Variable($arg);
+	}
+	
+	function current()
+	{
+		return $this->variables[$this->position];
+	}
+
+	function key()
+	{
+		return $this->position;
+	}
+
+	function next()
+	{
+		++$this->position;
+	}
+
+	function valid()
+	{
+		return isset($this->variables[$this->position]);
+	}
+	
+	function rewind()
+	{
+		$this->position = 0;
 	}
 }
 
