@@ -54,6 +54,9 @@ class Scanner
 		if (empty($contents))
 			return false;
 		
+		if (function_exists('mb_convert_encoding'))
+			$contents = mb_convert_encoding($contents, 'UTF-8');
+		
 		if (!$this->scan_comments) {
 			// Strip comments
 			$contents = preg_replace('/\/\/.*$/m', '', $contents);
