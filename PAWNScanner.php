@@ -35,7 +35,7 @@ class Scanner
 	public $constants = array();
 	
 	/** @var bool Whether comments should be scanned. */
-	public $scan_comments = false; // Should comments be scanned?
+	public $scan_comments = false;
 	
 	/**
 	 * Scans a file. Returns whether it was scanned.
@@ -89,7 +89,13 @@ class Scanner
 			foreach ($matches as $match) {
 				@list(, $search, $replacement) = $match;
 				
-				$this->macros[$search] = $replacement;
+				$this->macros[$search] = (object) array(
+					'search'      => $search,
+					'replacement' => $replacement,
+					'info'        => (object) array(
+						'file' => (string) $file
+					)
+				);
 			}
 		}
 		
@@ -101,14 +107,18 @@ class Scanner
 				// Remove preprocessor directives from the enum body
 				$body = preg_replace('/^\s*#.*?$/m', '', $body);
 				
-				$this->enums[] = new Enumeration($tag, $name, $increment, $body);
+				$this->enums[] = new Enumeration($tag, $name, $increment, $body, array(
+					'file' => (string) $file
+				));
 			}
 		}
 		
 		//Search symbol constants. Only non-indented, as they're assumably in the global scope.
 		if (preg_match_all('/^const\s+(\S.*?\s*=\s*.+?)\s*;\s*$/m', $contents, $matches, PREG_SET_ORDER)) {
 			foreach ($matches as $match) {
-				$constant = new Variable($match[1]);
+				$constant = new Variable($match[1], array(
+					'file' => (string) $file
+				));
 				
 				$this->constants[$constant->varname] = $constant;
 			}
@@ -371,6 +381,15 @@ class Variable
 	public $varname;
 	
 	/**
+	 * Extra information about the variable, optionally given when instantiating.
+	 *
+	 * Internally, a property telling which file it came from is added.
+	 *
+	 * @var \stdClass
+	 */
+	public $info;
+	
+	/**
 	 * The variable's array dimensions.
 	 * 
 	 * Null means it's not an array. True means it's an array without a fixed
@@ -396,8 +415,15 @@ class Variable
 	/**
 	 * Construct the class from a string containing a variable declaration.
 	 */
-	public function __construct($varstr)
+	public function __construct($varstr, $info = null)
 	{
+		$this->info = new \stdClass();
+
+		if ($info !== null) {
+			foreach ($info as $k => $v)
+				$this->info->$k = $v;
+		}
+		
 		$varstr = trim($varstr);
 		
 		if (preg_match('/^(const)?\s*(&)?\s*(?:(.*?)(?<!:):)?\s*((?:[a-z@_][a-z0-9@_\.\:]*)|\.\.\.)(?:\s*(\[\s*.*\s*?\]))?(?:\s*(\<\s*.*\s*?\>))?(?:\s*=\s*(.+)\s*?)?$/i', $varstr, $matches)) {
@@ -556,6 +582,15 @@ class Enumeration
 	
 	/** @var \PAWNScanner\EnumerationVariableList[] The entries. */
 	public $entries;
+	
+	/**
+	 * Extra information about the variable, optionally given when instantiating.
+	 *
+	 * Internally, a property telling which file it came from is added.
+	 *
+	 * @var \stdClass
+	 */
+	public $info;
 
 	/**
 	 * Construct the class from raw data.
@@ -565,8 +600,15 @@ class Enumeration
 	 * @param string $increment The increment.
 	 * @param string $body The body.
 	 */
-	public function __construct($tag, $name, $increment, $body)
+	public function __construct($tag, $name, $increment, $body, $info = null)
 	{
+		$this->info = new \stdClass();
+
+		if ($info !== null) {
+			foreach ($info as $k => $v)
+				$this->info->$k = $v;
+		}
+		
 		$this->name = empty($tag) ? null : $tag;
 		$this->name = empty($name) ? null : $name;
 		$this->increment = empty($increment) ? null : $increment;
