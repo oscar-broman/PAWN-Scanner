@@ -195,7 +195,7 @@ class FunctionDeclaration
 	 * @param string $name The function's name.
 	 * @param string $arguments The function's list of arguments.
 	 * @param string $type What kind of declaration it is.
-	 * @param string $info Extra information about the function.
+	 * @param string|null $info Extra information about the function.
 	 */
 	public function __construct($name, $tag, $arguments = '', $type = self::TYPE_UNKNOWN, $info = null)
 	{
@@ -414,6 +414,8 @@ class Variable
 	
 	/**
 	 * Construct the class from a string containing a variable declaration.
+	 * @param string $varstr The variable declaration/definition string.
+	 * @param string|null $info Extra information about the variable.
 	 */
 	public function __construct($varstr, $info = null)
 	{
@@ -599,6 +601,7 @@ class Enumeration
 	 * @param string $name The name.
 	 * @param string $increment The increment.
 	 * @param string $body The body.
+	 * @param string|null $info Extra information about the enumeration.
 	 */
 	public function __construct($tag, $name, $increment, $body, $info = null)
 	{
