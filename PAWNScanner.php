@@ -67,12 +67,14 @@ class Scanner
 		$contents = preg_replace('/\\\\\s*?\n\s*/', ' ', $contents);
 		
 		// Search for forward/native declarations
-		if (preg_match_all('/\b(forward|native)\s+([a-z@_][a-z0-9@_\.\:]*(?<!:):)?\s*([a-z@_][a-z0-9@_\.\:]*)\s*\((.*?)\)\s*;/i', $contents, $matches, PREG_SET_ORDER)) {
+		if (preg_match_all('/\b(forward|stock|native)\s+([a-z@_][a-z0-9@_\.\:]*(?<!:):)?\s*([a-z@_][a-z0-9@_\.\:]*)\s*\((.*?)\)\s*;/i', $contents, $matches, PREG_SET_ORDER)) {
 			foreach ($matches as $match) {
 				list(, $type, $tag, $name, $arguments) = $match;
 				
 				if ($type == 'forward')
 					$type = FunctionDeclaration::TYPE_FORWARD;
+				else if ($type == 'stock')
+					$type = FunctionDeclaration::TYPE_FORWARD_STOCK;
 				else
 					$type = FunctionDeclaration::TYPE_NATIVE;
 				
@@ -161,8 +163,11 @@ class FunctionDeclaration
 	/** @var int Is a forward declaration. */
 	const TYPE_FORWARD = 1;
 	
+	/** @var int Is a forward declaration for stocks. */
+	const TYPE_FORWARD_STOCK = 2;
+	
 	/** @var int Is a native declaration. */
-	const TYPE_NATIVE  = 2;
+	const TYPE_NATIVE  = 3;
 	
 	/** @var string The name of the function. */
 	public $name;
@@ -217,6 +222,9 @@ class FunctionDeclaration
 		switch ($this->type) {
 			case self::TYPE_FORWARD:
 				return "forward $this->name($this->arguments)";
+			
+			case self::TYPE_FORWARD_STOCK:
+				return "forward stock $this->name($this->arguments)";
 			
 			case self::TYPE_NATIVE:
 				return "native $this->name($this->arguments)";
