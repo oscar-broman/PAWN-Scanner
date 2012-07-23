@@ -79,7 +79,7 @@ class Scanner
 					$type = FunctionDeclaration::TYPE_NATIVE;
 				
 				if (!isset($this->functions[$name])) {
-					$this->functions[$name] = $function = new FunctionDeclaration($name, $tag, $arguments, $type, array(
+					$this->functions[$name] = new FunctionDeclaration($name, $tag, $arguments, $type, array(
 						'file' => (string) $file
 					));
 				}
@@ -255,7 +255,65 @@ class VariableList implements \Iterator
 	 */
 	public function __construct($liststr)
 	{
-		$args = preg_split('/\s*,\s*(?![^{]*?})/', $liststr, -1, PREG_SPLIT_NO_EMPTY);
+		$args = array();
+		
+		$in_quote = null;
+		$bracket_depth = 0;
+		$escape = false;
+		
+		for ($i = 0, $l = strlen($liststr); $i < $l; $i++) {
+			$c = $liststr{$i};
+			
+			if ($escape) {
+				$escape = false;
+				
+				continue;
+			} else if ($c === '\\') {
+				$escape = true;
+				
+				continue;
+			}
+			
+			if ($in_quote !== null && $c !== $in_quote) {
+				continue;
+			}
+			
+			switch ($c) {
+				case '"':
+				case "'":
+					if ($in_quote === null)
+						$in_quote = $c;
+					else if ($in_quote === $c)
+						$in_quote = null;
+					
+					break;
+				
+				case '{':
+				case '(':
+				case '[':
+					$bracket_depth++;
+					
+					break;
+				
+				case '}':
+				case ')':
+				case ']':
+					$bracket_depth--;
+
+					break;
+				
+				case ',':
+					if ($in_quote === null && $bracket_depth === 0) {
+						$args[] = substr($liststr, 0, $i);
+						
+						$liststr = substr($liststr, $i + 1);
+						$l = strlen($liststr);
+						$i = 0;
+					}
+					
+					break;
+			}
+		}
 		
 		foreach ($args as $arg)
 			$this->variables[] = new Variable($arg);
@@ -472,12 +530,11 @@ class Variable
 				}
 			}
 			
+			$this->tags = new VariableTagList($tags);
 			$this->default = $default;
 		} else {
 			trigger_error("Invalid argstr: \"$varstr\".", E_USER_NOTICE);
 		}
-		
-		$this->tags = new VariableTagList($tags);
 	}
 	
 	/**
@@ -496,7 +553,7 @@ class Variable
 		if ($this->ref)
 			$varstr .= '&';
 		
-		if ($this->tags->count)
+		if ($this->tags && $this->tags->count)
 			$varstr .= $this->tags . ':';
 		
 		$varstr .= $this->varname;
